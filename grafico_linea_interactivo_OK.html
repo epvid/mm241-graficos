@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gráfico de Línea Interactivo</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f0f4f8;
+        }
+        .chart-container {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .controls {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+        }
+        .control-group {
+            margin-bottom: 15px;
+        }
+        label {
+            font-weight: bold;
+            color: #2c3e50;
+            display: block;
+            margin-bottom: 5px;
+        }
+        input, select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        button {
+            background-color: #3498db;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s ease;
+        }
+        button:hover {
+            background-color: #2980b9;
+        }
+        .data-inputs {
+            display: grid;
+            gap: 15px;
+        }
+        .data-input {
+            display: grid;
+            grid-template-columns: 1fr 1fr auto;
+            gap: 10px;
+            align-items: center;
+            background-color: #f8f9fa;
+            padding: 10px;
+            border-radius: 4px;
+        }
+        .data-input input {
+            margin-bottom: 0;
+        }
+        .data-input button {
+            padding: 5px 10px;
+            font-size: 14px;
+            background-color: #e74c3c;
+        }
+        .data-input button:hover {
+            background-color: #c0392b;
+        }
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        #markerSize {
+            width: calc(100% - 50px);
+            margin-right: 10px;
+        }
+        #markerSizeValue {
+            display: inline-block;
+            width: 30px;
+            text-align: right;
+        }
+    </style>
+</head>
+<body>
+    <h1>Gráfico de Línea Interactivo</h1>
+    
+    <div class="chart-container">
+        <canvas id="lineChart"></canvas>
+    </div>
+
+    <div class="controls">
+        <div class="control-group">
+            <label for="chartTitle">Título del gráfico:</label>
+            <input type="text" id="chartTitle" value="Mi Gráfico de Línea">
+        </div>
+
+        <div class="control-group">
+            <label>Etiquetas y Datos:</label>
+            <div id="dataInputs" class="data-inputs">
+                <div class="data-input">
+                    <input type="text" placeholder="Etiqueta" value="Enero">
+                    <input type="number" placeholder="Valor" value="10">
+                    <button onclick="removeDataPoint(this)">Eliminar</button>
+                </div>
+                <div class="data-input">
+                    <input type="text" placeholder="Etiqueta" value="Febrero">
+                    <input type="number" placeholder="Valor" value="20">
+                    <button onclick="removeDataPoint(this)">Eliminar</button>
+                </div>
+                <div class="data-input">
+                    <input type="text" placeholder="Etiqueta" value="Marzo">
+                    <input type="number" placeholder="Valor" value="15">
+                    <button onclick="removeDataPoint(this)">Eliminar</button>
+                </div>
+            </div>
+            <button onclick="addDataPoint()" style="margin-top: 10px;">Agregar Dato</button>
+        </div>
+
+        <div class="control-group">
+            <label for="lineColor">Color de la línea:</label>
+            <input type="color" id="lineColor" value="#3498db">
+        </div>
+
+        <div class="control-group">
+            <label for="markerStyle">Estilo de marcador:</label>
+            <select id="markerStyle">
+                <option value="circle">Círculo</option>
+                <option value="rect">Cuadrado</option>
+                <option value="triangle">Triángulo</option>
+                <option value="star">Estrella</option>
+            </select>
+        </div>
+
+        <div class="control-group">
+            <label for="markerSize">Tamaño de marcador: <span id="markerSizeValue">6</span></label>
+            <input type="range" id="markerSize" min="1" max="20" value="6">
+        </div>
+
+        <button onclick="updateChart()">Actualizar Gráfico</button>
+    </div>
+    <!-- Sección del nombre y correo -->
+    <p id="authorInfo">Erick Pineda con IA | Correo: erickpineda@unah.edu.hn</p>
+
+    <script>
+        let chart;
+
+        function createChart() {
+            const ctx = document.getElementById('lineChart').getContext('2d');
+            chart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        data: [],
+                        borderColor: '#3498db',
+                        backgroundColor: 'rgba(52, 152, 219, 0.2)',
+                        tension: 0.1,
+                        pointRadius: 6,
+                        fill: false
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'Mi Gráfico de Línea',
+                            font: {
+                                size: 24,
+                                weight: 'bold'
+                            },
+                            padding: {
+                                top: 10,
+                                bottom: 30
+                            }
+                        },
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        }
+
+        function updateChart() {
+            const title = document.getElementById('chartTitle').value;
+            const dataInputs = document.querySelectorAll('.data-input');
+            const labels = [];
+            const data = [];
+
+            dataInputs.forEach(input => {
+                labels.push(input.querySelector('input[type="text"]').value);
+                data.push(parseFloat(input.querySelector('input[type="number"]').value));
+            });
+
+            const lineColor = document.getElementById('lineColor').value;
+            const markerStyle = document.getElementById('markerStyle').value;
+            const markerSize = parseInt(document.getElementById('markerSize').value);
+
+            chart.options.plugins.title.text = title;
+            chart.data.labels = labels;
+            chart.data.datasets[0].data = data;
+            chart.data.datasets[0].borderColor = lineColor;
+            chart.data.datasets[0].backgroundColor = `${lineColor}33`;
+            chart.data.datasets[0].pointStyle = markerStyle;
+            chart.data.datasets[0].pointRadius = markerSize;
+
+            chart.update();
+        }
+
+        function addDataPoint() {
+            const dataInputs = document.getElementById('dataInputs');
+            const newInput = document.createElement('div');
+            newInput.className = 'data-input';
+            newInput.innerHTML = `
+                <input type="text" placeholder="Etiqueta">
+                <input type="number" placeholder="Valor">
+                <button onclick="removeDataPoint(this)">Eliminar</button>
+            `;
+            dataInputs.appendChild(newInput);
+        }
+
+        function removeDataPoint(button) {
+            const dataInputs = document.getElementById('dataInputs');
+            if (dataInputs.children.length > 1) {
+                button.parentElement.remove();
+            }
+        }
+
+        document.getElementById('markerSize').addEventListener('input', function() {
+            document.getElementById('markerSizeValue').textContent = this.value;
+        });
+
+        createChart();
+        updateChart();
+    </script>
+</body>
+</html>

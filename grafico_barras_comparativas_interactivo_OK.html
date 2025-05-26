@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gráfico de Barras Comparativas Interactivo</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f0f4f8;
+        }
+        .chart-container {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .controls {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+        }
+        .control-group {
+            margin-bottom: 15px;
+        }
+        label {
+            font-weight: bold;
+            color: #2c3e50;
+            display: block;
+            margin-bottom: 5px;
+        }
+        input, select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        button {
+            background-color: #3498db;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s ease;
+        }
+        button:hover {
+            background-color: #2980b9;
+        }
+        .data-inputs {
+            display: grid;
+            gap: 15px;
+        }
+        .data-input {
+            display: grid;
+            gap: 10px;
+            align-items: center;
+            background-color: #f8f9fa;
+            padding: 10px;
+            border-radius: 4px;
+        }
+        .data-input input {
+            margin-bottom: 0;
+        }
+        .data-input button {
+            padding: 5px 10px;
+            font-size: 14px;
+            background-color: #e74c3c;
+        }
+        .data-input button:hover {
+            background-color: #c0392b;
+        }
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .group-controls {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+            align-items: center;
+        }
+        .group-label {
+            flex: 1;
+        }
+        .group-color {
+            width: 50px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Gráfico de Barras Comparativas Interactivo</h1>
+    
+    <div class="chart-container">
+        <canvas id="barChart"></canvas>
+    </div>
+
+    <div class="controls">
+        <div class="control-group">
+            <label for="chartTitle">Título del gráfico:</label>
+            <input type="text" id="chartTitle" value="Mi Gráfico de Barras Comparativas">
+        </div>
+
+        <div class="control-group">
+            <label>Grupos:</label>
+            <div id="groupControls">
+                <div class="group-controls">
+                    <input type="text" class="group-label" value="Grupo A" placeholder="Etiqueta Grupo">
+                    <input type="color" class="group-color" value="#3498db">
+                    <button onclick="removeGroup(this)">Eliminar</button>
+                </div>
+                <div class="group-controls">
+                    <input type="text" class="group-label" value="Grupo B" placeholder="Etiqueta Grupo">
+                    <input type="color" class="group-color" value="#e74c3c">
+                    <button onclick="removeGroup(this)">Eliminar</button>
+                </div>
+            </div>
+            <button onclick="addGroup()" style="margin-top: 10px;">Agregar Grupo</button>
+        </div>
+
+        <div class="control-group">
+            <label>Etiquetas y Datos:</label>
+            <div id="dataInputs" class="data-inputs">
+                <div class="data-input">
+                    <input type="text" placeholder="Etiqueta" value="Categoría 1">
+                    <input type="number" placeholder="Valor A" value="10">
+                    <input type="number" placeholder="Valor B" value="15">
+                </div>
+                <div class="data-input">
+                    <input type="text" placeholder="Etiqueta" value="Categoría 2">
+                    <input type="number" placeholder="Valor A" value="20">
+                    <input type="number" placeholder="Valor B" value="25">
+                </div>
+                <div class="data-input">
+                    <input type="text" placeholder="Etiqueta" value="Categoría 3">
+                    <input type="number" placeholder="Valor A" value="15">
+                    <input type="number" placeholder="Valor B" value="20">
+                </div>
+            </div>
+            <button onclick="addDataPoint()" style="margin-top: 10px;">Agregar Categoría</button>
+        </div>
+
+        <button onclick="updateChart()">Actualizar Gráfico</button>
+    </div>
+    <!-- Sección del nombre y correo -->
+    <p id="authorInfo">Erick Pineda con IA | Correo: erickpineda@unah.edu.hn</p>
+
+    <script>
+        let chart;
+
+        function createChart() {
+            const ctx = document.getElementById('barChart').getContext('2d');
+            chart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: [],
+                    datasets: []
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'Mi Gráfico de Barras Comparativas',
+                            font: {
+                                size: 24,
+                                weight: 'bold'
+                            },
+                            padding: {
+                                top: 10,
+                                bottom: 30
+                            }
+                        },
+                        legend: {
+                            display: true,
+                            position: 'top',
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        }
+
+        function updateChart() {
+            const title = document.getElementById('chartTitle').value;
+            const groupControls = document.querySelectorAll('.group-controls');
+            const dataInputs = document.querySelectorAll('.data-input');
+            const labels = [];
+            const datasets = [];
+
+            groupControls.forEach((group, index) => {
+                const label = group.querySelector('.group-label').value;
+                const color = group.querySelector('.group-color').value;
+                const data = [];
+
+                dataInputs.forEach(input => {
+                    if (index === 0) {
+                        labels.push(input.querySelector('input[type="text"]').value);
+                    }
+                    data.push(parseFloat(input.querySelectorAll('input[type="number"]')[index].value) || 0);
+                });
+
+                datasets.push({
+                    label: label,
+                    data: data,
+                    backgroundColor: color,
+                });
+            });
+
+            chart.options.plugins.title.text = title;
+            chart.data.labels = labels;
+            chart.data.datasets = datasets;
+
+            chart.update();
+        }
+
+        function addGroup() {
+            const groupControls = document.getElementById('groupControls');
+            const newGroup = document.createElement('div');
+            newGroup.className = 'group-controls';
+            newGroup.innerHTML = `
+                <input type="text" class="group-label" placeholder="Etiqueta Grupo">
+                <input type="color" class="group-color" value="#${Math.floor(Math.random()*16777215).toString(16)}">
+                <button onclick="removeGroup(this)">Eliminar</button>
+            `;
+            groupControls.appendChild(newGroup);
+
+            const dataInputs = document.querySelectorAll('.data-input');
+            dataInputs.forEach(input => {
+                const newInput = document.createElement('input');
+                newInput.type = 'number';
+                newInput.placeholder = `Valor ${String.fromCharCode(65 + groupControls.children.length - 1)}`;
+                input.appendChild(newInput);
+            });
+        }
+
+        function removeGroup(button) {
+            const groupControls = document.getElementById('groupControls');
+            if (groupControls.children.length > 1) {
+                const index = Array.from(groupControls.children).indexOf(button.parentElement);
+                button.parentElement.remove();
+
+                const dataInputs = document.querySelectorAll('.data-input');
+                dataInputs.forEach(input => {
+                    input.children[index + 1].remove();
+                });
+            }
+        }
+
+        function addDataPoint() {
+            const dataInputs = document.getElementById('dataInputs');
+            const newInput = document.createElement('div');
+            newInput.className = 'data-input';
+            const groupCount = document.querySelectorAll('.group-controls').length;
+            
+            let innerHTML = `<input type="text" placeholder="Etiqueta">`;
+            for (let i = 0; i < groupCount; i++) {
+                innerHTML += `<input type="number" placeholder="Valor ${String.fromCharCode(65 + i)}">`;
+            }
+            
+            newInput.innerHTML = innerHTML;
+            dataInputs.appendChild(newInput);
+        }
+
+        createChart();
+        updateChart();
+    </script>
+</body>
+</html>
